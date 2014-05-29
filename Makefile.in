@@ -165,5 +165,9 @@ clean: clean-build clean-generated
 clean-build:
 	rm -rf $(DOCS_DIR)/_build
 
+clean-refs:
+	rm -rf $(DOCS_DIR)/ref/v0.13.3/
+	rm -rf $(DOCS_DIR)/ref/master/
+
 clean-generated:
 	rm -rf $(DOCS_DIR)
