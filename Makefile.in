@@ -87,7 +87,7 @@ $(DOCS_DIR)/meta/index.rst: source/meta_index.rst
 
 $(DOCS_DIR)/index.rst: source/index.rst
 	cp $< $@
-	
+
 $(DOCS_DIR)/mix/index.rst: source/mix_index.rst
 	cp $< $@
 
