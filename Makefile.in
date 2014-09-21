@@ -1,28 +1,21 @@
 # Variables set via the configure.sh script
-ELIXIR_DIR =
 ELIXIR_LANG_DIR =
-EXDOC_DIR =
 
-SOURCE_DIR = source
 DOCS_DIR = docs
-DOCS_SUBDIRS = $(addprefix $(DOCS_DIR)/,repo intro mix_otp meta \
-												_static technical ref)
+DOCS_SUBDIRS = $(addprefix $(DOCS_DIR)/,repo intro mix_otp meta _static)
 
-REF_DIR_MASTER = $(DOCS_DIR)/ref/master
-REF_DIR_STABLE = $(DOCS_DIR)/ref/v0.13.3
-
-EXDOC_BIN = $(EXDOC_DIR)/bin/ex_doc
 GETTING_STARTED_ROOT = $(ELIXIR_LANG_DIR)/getting_started
 
 define make_path
 $(addprefix $(1),$(addsuffix .rst,$(2)))
 endef
 
-CONF_FILES = $(DOCS_DIR)/conf.py $(DOCS_DIR)/elixir_domain.py
+CONF_FILES = $(DOCS_DIR)/conf.py
 INDEX_FILES = $(addsuffix /index.rst,\
-				  $(DOCS_DIR) $(DOCS_DIR)/intro $(DOCS_DIR)/mix_otp \
+				  $(DOCS_DIR) \
+				  $(DOCS_DIR)/intro \
+				  $(DOCS_DIR)/mix_otp \
 				  $(DOCS_DIR)/meta)
-REF_FILES = $(DOCS_DIR)/ref/master.rst $(DOCS_DIR)/ref/v0.13.3.rst
 
 GETTING_STARTED_CHAPTERS = 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
 GETTING_STARTED_FILES = \
@@ -34,39 +27,18 @@ MIX_GUIDE_FILES = $(call make_path,$(DOCS_DIR)/mix_otp/,$(MIX_GUIDE_CHAPTERS))
 META_GUIDE_CHAPTERS = 1 2 3
 META_GUIDE_FILES = $(call make_path,$(DOCS_DIR)/meta/,$(META_GUIDE_CHAPTERS))
 
-TECHNICAL_FILES = $(DOCS_DIR)/technical/scoping.rst
-
-SOURCE_REPO_SECTIONS = readme release changelog contributing license
-SOURCE_REPO_FILES = \
-			$(call make_path,$(DOCS_DIR)/repo/,$(SOURCE_REPO_SECTIONS))
-
-.PHONY: rebuild clean clean-build clean-generated refs
+.PHONY: rebuild clean clean-build clean-generated
 
 all: build
 
 rebuild: clean-build build
 
-refs: $(DOCS_DIR)
-	$(EXDOC_BIN) -f sphinx -o $(REF_DIR_MASTER)/elixir/ \
-		Elixir 0.14.0-dev $(ELIXIR_DIR)/lib/elixir/ebin
-	$(EXDOC_BIN) -f sphinx -o $(REF_DIR_MASTER)/exunit/ \
-		ExUnit 0.14.0-dev $(ELIXIR_DIR)/lib/ex_unit/ebin
-	$(EXDOC_BIN) -f sphinx -o $(REF_DIR_MASTER)/eex/ \
-		EEx 0.14.0-dev $(ELIXIR_DIR)/lib/eex/ebin
-	$(EXDOC_BIN) -f sphinx -o $(REF_DIR_MASTER)/mix/ \
-		Mix 0.14.0-dev $(ELIXIR_DIR)/lib/mix/ebin
-	$(EXDOC_BIN) -f sphinx -o $(REF_DIR_MASTER)/iex/ \
-		IEx 0.14.0-dev $(ELIXIR_DIR)/lib/iex/ebin
-
 build: $(DOCS_DIR) \
 	   $(CONF_FILES) \
 	   $(INDEX_FILES) \
-	   $(REF_FILES) \
-	   $(TECHNICAL_FILES) \
 	   $(GETTING_STARTED_FILES) \
 	   $(MIX_GUIDE_FILES) \
 	   $(META_GUIDE_FILES) \
-	   $(SOURCE_REPO_FILES) \
 	   $(DOCS_DIR)/Makefile
 	# build html
 	$(MAKE) -C $(DOCS_DIR) html
@@ -74,36 +46,20 @@ build: $(DOCS_DIR) \
 $(DOCS_DIR)/conf.py: source/conf.py
 	cp $< $@
 
-$(DOCS_DIR)/elixir_domain.py: source/elixir_domain.py
+$(DOCS_DIR)/index.rst: source/index.rst
 	cp $< $@
 
 $(DOCS_DIR)/meta/index.rst: source/meta_index.rst
 	cp $< $@
 
-$(DOCS_DIR)/index.rst: source/index.rst
-	cp $< $@
-
-$(DOCS_DIR)/mix_otp/index.rst: source/mix_index.rst
+$(DOCS_DIR)/mix_otp/index.rst: source/mix_otp_index.rst
 	cp $< $@
 
 $(DOCS_DIR)/intro/index.rst: source/intro_index.rst
 	cp $< $@
 
-$(DOCS_DIR)/ref/v0.13.3.rst: source/ref/v0.13.3.rst
-	cp $< $@
-
-$(DOCS_DIR)/ref/master.rst: source/ref/master.rst
-	cp $< $@
-
 $(DOCS_DIR)/Makefile: source/sphinx_Makefile
 	cp $< $@
-
-$(DOCS_DIR)/technical/scoping.rst: $(SOURCE_DIR)/technical/scoping.md
-	mkdir -p $(DOCS_DIR)/technical
-	pandoc --from "markdown" --to "rst" $< \
-		| sed 's/--: toc/.. contents:: :local:/' \
-		> $@
-
 
 define GETTING_STARTED_TEMPLATE
 $(DOCS_DIR)/$(1)/$(3).rst: $(GETTING_STARTED_ROOT)/$(2)/$(3).markdown
@@ -128,37 +84,10 @@ $(DOCS_DIR): $(DOCS_SUBDIRS)
 $(DOCS_SUBDIRS):
 	mkdir -p $@
 
-$(DOCS_DIR)/repo/readme.rst: $(ELIXIR_DIR)/README.md
-	echo "Readme" > $@
-	pandoc --from "markdown" --to "rst" $< \
-		| grep -v '^|Elixir|' \
-		| grep -v '^|Build Status|' \
-		>> $@
-
-$(DOCS_DIR)/repo/release.rst: $(ELIXIR_DIR)/RELEASE.md
-	pandoc --from "markdown" -o $@ $<
-
-$(DOCS_DIR)/repo/changelog.rst: $(ELIXIR_DIR)/CHANGELOG.md
-	pandoc --from "markdown" -o $@ $<
-
-$(DOCS_DIR)/repo/contributing.rst: $(ELIXIR_DIR)/CONTRIBUTING.md
-	pandoc --from "markdown" -o $@ $<
-
-$(DOCS_DIR)/repo/license.rst: $(ELIXIR_DIR)/LICENSE
-	echo "License" > $@
-	echo "=======" >> $@
-	echo >> $@
-	cat $< >> $@
-
-
 clean: clean-build clean-generated
 
 clean-build:
 	rm -rf $(DOCS_DIR)/_build
-
-clean-refs:
-	rm -rf $(DOCS_DIR)/ref/v0.13.3/
-	rm -rf $(DOCS_DIR)/ref/master/
 
 clean-generated:
 	rm -rf $(DOCS_DIR)
