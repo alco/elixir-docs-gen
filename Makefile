@@ -1,13 +1,9 @@
-# Variables set via the configure.sh script
-ELIXIR_DIR =
-ELIXIR_LANG_DIR =
-EXDOC_DIR =
+ELIXIR_LANG_DIR = elixir-lang.github.com
 
 SOURCE_DIR = source
 DOCS_DIR = docs
 DOCS_SUBDIRS = $(addprefix $(DOCS_DIR)/,intro mix_otp meta _static technical)
 
-EXDOC_BIN = $(EXDOC_DIR)/bin/ex_doc
 GETTING_STARTED_ROOT = $(ELIXIR_LANG_DIR)/getting_started
 
 define make_path
@@ -30,13 +26,14 @@ META_GUIDE_FILES = $(call make_path,$(DOCS_DIR)/meta/,$(META_GUIDE_CHAPTERS))
 
 TECHNICAL_FILES = $(DOCS_DIR)/technical/scoping.rst
 
-.PHONY: copy-files build rebuild push clean clean-build clean-generated
+.PHONY: elixir_lang_dir copy-files build rebuild push clean clean-build clean-generated
 
 all: build
 
 rebuild: clean-build build
 
-copy-files: $(DOCS_SUBDIRS) \
+copy-files: elixir_lang_dir \
+			$(DOCS_SUBDIRS) \
 	        $(CONF_FILES) \
 	        $(INDEX_FILES) \
 	        $(TECHNICAL_FILES) \
@@ -51,11 +48,18 @@ build: copy-files
 push: build
 	cd docs && git add -A . && git commit -m "Update generated docs" && git push origin master
 
+$(ELIXIR_LANG_DIR):
+	git clone https://github.com/elixir-lang/elixir-lang.github.com.git
+
+elixir_lang_dir: $(ELIXIR_LANG_DIR)
+	cd $(ELIXIR_LANG_DIR) && git checkout 09c5412~
+
 $(DOCS_DIR)/conf.py: source/conf.py
 	cp $< $@
 
 $(DOCS_DIR)/index.rst: source/index.rst
-	cp $< $@
+	#cp $< $@
+	sed 's/<GEN_COMMIT>/'`cd $(ELIXIR_LANG_DIR) && git rev-parse HEAD`'/' $< >$@
 
 $(DOCS_DIR)/intro/index.rst: source/intro_index.rst
 	cp $< $@
