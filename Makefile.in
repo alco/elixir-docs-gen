@@ -30,13 +30,13 @@ META_GUIDE_FILES = $(call make_path,$(DOCS_DIR)/meta/,$(META_GUIDE_CHAPTERS))
 
 TECHNICAL_FILES = $(DOCS_DIR)/technical/scoping.rst
 
-.PHONY: copy-files rebuild clean clean-build clean-generated
+.PHONY: copy-files build rebuild push clean clean-build clean-generated
 
 all: build
 
 rebuild: clean-build build
 
-copy-files: $(DOCS_DIR) \
+copy-files: $(DOCS_SUBDIRS) \
 	        $(CONF_FILES) \
 	        $(INDEX_FILES) \
 	        $(TECHNICAL_FILES) \
@@ -45,9 +45,11 @@ copy-files: $(DOCS_DIR) \
 	        $(META_GUIDE_FILES) \
 	        $(DOCS_DIR)/Makefile
 
-# build html
 build: copy-files
 	$(MAKE) -C $(DOCS_DIR) html
+
+push: build
+	cd docs && git commit -m "Update generated docs" && git push origin master
 
 $(DOCS_DIR)/conf.py: source/conf.py
 	cp $< $@
@@ -94,9 +96,11 @@ $(foreach chapter,$(MIX_GUIDE_CHAPTERS),$(eval $(call GETTING_STARTED_TEMPLATE,m
 $(foreach chapter,$(META_GUIDE_CHAPTERS),$(eval $(call GETTING_STARTED_TEMPLATE,meta,meta,$(chapter))))
 
 
-$(DOCS_DIR): $(DOCS_SUBDIRS)
+$(DOCS_DIR):
+	git clone git@github.com:alco/elixir-docs.git docs
+	cd docs && rm -rf *
 
-$(DOCS_SUBDIRS):
+$(DOCS_SUBDIRS): $(DOCS_DIR)
 	mkdir -p $@
 
 clean: clean-build clean-generated
