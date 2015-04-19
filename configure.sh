@@ -1,8 +1,7 @@
 #!/bin/sh
 
 if [ "$#" -ne 3 ]; then
-    echo "usage: ./configure.sh <path to elixir dir> <path to elixir site dir> \
-        <path to ex_doc dir>"
+    echo "usage: ./configure.sh <path to elixir dir> <path to elixir site dir> <path to ex_doc dir>"
     exit 1
 fi
 
