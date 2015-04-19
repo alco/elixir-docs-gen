@@ -49,7 +49,7 @@ build: copy-files
 	$(MAKE) -C $(DOCS_DIR) html
 
 push: build
-	cd docs && git commit -m "Update generated docs" && git push origin master
+	cd docs && git add -A . && git commit -m "Update generated docs" && git push origin master
 
 $(DOCS_DIR)/conf.py: source/conf.py
 	cp $< $@
